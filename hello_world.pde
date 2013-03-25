@@ -13,7 +13,7 @@ int diameter = 80;
 int gridWidth = (diameter + padding) * columns;
 int gridHeight = (diameter + padding) * columns;
 
-Circle[][] circles = new Circle[rows][columns];
+Circles circles;
 
 void setup() {
   session = new PXCUPipeline(this);
@@ -22,13 +22,15 @@ void setup() {
 
   size(gridWidth, gridHeight);
 
+  circles = new Circles(rows, columns);
+
    for (int row = 0; row < rows; row++) {
     for (int column = 0; column < columns; column++) {
 
       int x = ((diameter + padding) * column) + ((padding + diameter) / 2);
       int y = ((diameter + padding) * row) + ((padding + diameter) / 2);
 
-      circles[row][column] = new Circle(x, y);
+      circles.add(x,y);
     }
   }
 }
@@ -44,22 +46,22 @@ void draw() {
       int touchedX = int(map(hands.primaryHand[i].x, 0, 320, 0, gridWidth));
       int touchedY = int(map(hands.primaryHand[i].y, 0, 320, 0, gridWidth));
 
-      Circle circle = findTouched(gridWidth - touchedX, touchedY);
+      Circle circle = circles.findTouched(gridWidth - touchedX, touchedY);
       circle.touch(1);
     }
     if (hands.secondaryHand[i].x >0) {
       int touchedX = int(map(hands.secondaryHand[i].x, 0, 320, 0, gridWidth));
       int touchedY = int(map(hands.secondaryHand[i].y, 0, 320, 0, gridWidth));
 
-      Circle circle = findTouched(gridWidth - touchedX, touchedY);
+      Circle circle = circles.findTouched(gridWidth - touchedX, touchedY);
       circle.touch(2);    
     }
   }
 
   for (int row = 0; row < rows; row++) {
     for (int column = 0; column < columns; column++) {
-      circles[row][column].draw();
-      circles[row][column].reset();
+      Circle circle = circles.get(row,column);
+      circle.draw();
     }
   }
 
@@ -68,12 +70,26 @@ void draw() {
   }
 }
 
+class Circles {
+  Circle circles[][];
 
-Circle findTouched(float x, float y) {
-  int column = int(x / ( diameter + padding ));
-  int row = int(y / (diameter + padding));
+  Circles(int rows, int columns) {
+    circles = new Circle[rows][columns]; 
+  }
 
-  return circles[row][column];
+  void add(int x, int y){
+    circles[x][y] = new Circle(x, y);
+  }
+
+  Circle findTouched(float x, float y) {
+    int column = int(x / ( diameter + padding ));
+    int row = int(y / (diameter + padding));
+    return get(row, column);
+  }
+
+  Circle get(int row, int column) {
+    return circles[row][column];
+  }
 }
 
 class Circle {
@@ -106,6 +122,8 @@ class Circle {
     }
 
     ellipse(x, y, diameter, diameter);  
+
+    reset();
   }
 
   void touch(int tempType) {
